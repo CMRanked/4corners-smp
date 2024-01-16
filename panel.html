@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Earth SMP Admin Panel</title>
+  <!-- Bootstrap 5 CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.0.2/css/bootstrap.min.css">
+  <!-- Animate.css CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+  <!-- Custom CSS -->
+  <style>
+    /* Dark theme */
+    body {
+      background-color: #121212;
+      color: white;
+    }
+
+    .card {
+      background-color: #1f1f1f;
+      border: none;
+    }
+
+    .card-header {
+      background-color: #1f1f1f;
+      border-bottom: none;
+    }
+
+    .card-body {
+      background-color: #1f1f1f;
+    }
+
+    .card-footer {
+      background-color: #1f1f1f;
+      border-top: none;
+    }
+
+    .form-control {
+      background-color: #1f1f1f;
+      border: none;
+      color: white;
+    }
+
+    .form-control:focus {
+      background-color: #1f1f1f;
+      border: none;
+      color: white;
+      box-shadow: none;
+    }
+
+    .btn {
+      background-color: #1f1f1f;
+      border: none;
+      color: white;
+    }
+
+    .btn:hover {
+      background-color: #3d3d3d;
+      border: none;
+      color: white;
+    }
+
+    .btn:focus {
+      background-color: #3d3d3d;
+      border: none;
+      color: white;
+      box-shadow: none;
+    }
+
+    /* Animations */
+    .animate__animated.animate__fadeIn {
+      --animate-duration: 1s;
+    }
+
+    .animate__animated.animate__bounceIn {
+      --animate-duration: 1s;
+    }
+
+    .animate__animated.animate__bounceOut {
+      --animate-duration: 1s;
+    }
+  </style>
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/8.2.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.2.1/firebase-database.js"></script>
+  <!-- jQuery CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+  <!-- Animate.css CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.compat.min.js"></script>
+</head>
+<body>
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-12">
+        <h1 class="text-center mt-4 mb-4 animate__animated animate__fadeIn">Earth SMP Admin Panel</h1>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-12 col-md-6 col-lg-4">
+        <div class="card mb-4 animate__animated animate__fadeIn">
+          <div class="card-header">
+            <h2>Countries</h2>
+          </div>
+          <div class="card-body">
+            <select id="countries" class="form-control"></select>
+            <button onclick="disbandCountry()" class="btn mt-2">Disband Country</button>
+          </div>
+        </div>
+      </div>
+      <div class="col-12 col-md-6 col-lg-4">
+        <div class="card mb-4 animate__animated animate__fadeIn">
+          <div class="card-header">
+            <h2>Create Country</h2>
+          </div>
+          <div class="card-body">
+            <input type="text" id="newCountryName" placeholder="Country Name" class="form-control">
+            <input type="text" id="newCountryOwner" placeholder="Owner ID" class="form-control mt-2">
+            <button onclick="createCountry()" class="btn mt-2">Create Country</button>
+          </div>
+        </div>
+      </div>
+      <div class="col-12 col-md-6 col-lg-4">
+        <div class="card mb-4 animate__animated animate__fadeIn">
+          <div class="card-header">
+            <h2>Add User to Country</h2>
+          </div>
+          <div class="card-body">
+            <input type="text" id="userId" placeholder="User ID" class="form-control">
+            <select id="countryToAdd" class="form-control mt-2"></select>
+            <button onclick="addUserToCountry()" class="btn mt-2">Add User</button>
+          </div>
+        </div>
+      </div>
+      <div class="col-12 col-md-6 col-lg-4">
+        <div class="card mb-4 animate__animated animate__fadeIn">
+          <div class="card-header">
+            <h2>Users</h2>
+          </div>
+          <div class="card-body">
+            <select id="users" class="form-control"></select>
+            <button onclick="kickUser()" class="btn mt-2">Kick User</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="admin.js"></script>
+  <script>
+    // Add animations to the buttons
+    $("button").on("click", function() {
+      $(this).addClass("animate__animated animate__bounceOut");
+      setTimeout(() => {
+        $(this).removeClass("animate__animated animate__bounceOut");
+      }, 1000);
+    });
+  </script>
+</body>
+</html>
+<script>// Firebase configuration
+// Firebase configuration
+var firebaseConfig = {
+  apiKey: "AIzaSyBJoZo3fWHWU1GEy2YJnLPImMVOF8Dgr2Y",
+  authDomain: "cornersmp-f250a.firebaseapp.com",
+  databaseURL: "https://cornersmp-f250a-default-rtdb.firebaseio.com",
+  projectId: "cornersmp-f250a",
+  storageBucket: "cornersmp-f250a.appspot.com",
+  messagingSenderId: "383843171175",
+  appId: "1:383843171175:web:b31dbde896713dbcb90dc2",
+  measurementId: "G-YMD6063617"
+};
+
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+var database = firebase.database();
+
+// Function to get all countries
+function getCountries() {
+  return database.ref('/countries').once('value').then(function(snapshot) {
+    var select = document.getElementById('countries');
+    var selectToAdd = document.getElementById('countryToAdd'); // New dropdown
+    snapshot.forEach(function(childSnapshot) {
+      var option = document.createElement('option');
+      option.value = childSnapshot.key;
+      option.text = childSnapshot.val().name;
+      select.add(option);
+
+      var optionToAdd = document.createElement('option'); // New option for the new dropdown
+      optionToAdd.value = childSnapshot.key;
+      optionToAdd.text = childSnapshot.val().name;
+      selectToAdd.add(optionToAdd); // Add the new option to the new dropdown
+    });
+  });
+}
+
+// Function to create a new country
+function createCountry() {
+  var name = document.getElementById('newCountryName').value;
+  var owner = document.getElementById('newCountryOwner').value;
+
+  // Check if country already exists
+  return database.ref('/countries').orderByChild('name').equalTo(name).once('value').then(function(snapshot) {
+    if (snapshot.exists()) {
+      console.error('Country name is already taken');
+      return;
+    }
+
+    var newCountryKey = database.ref().child('countries').push().key;
+    var updates = {};
+    updates['/countries/' + newCountryKey] = {name: name, owner: owner, members: []};
+
+    // Log the action
+    console.log('Country ' + name + ' created with owner ' + owner);
+
+    return database.ref().update(updates);
+  });
+}
+
+// Function to add a user to a country
+function addUserToCountry() {
+  var select = document.getElementById('countryToAdd'); // Use the new dropdown
+  var countryId = select.options[select.selectedIndex].value;
+  var userId = document.getElementById('userId').value;
+  var updates = {};
+  updates['/users/' + userId + '/country'] = countryId;
+  
+  // Log the action
+  console.log('User ' + userId + ' added to country ' + countryId);
+  
+  return database.ref().update(updates);
+}
+
+// Function to disband a country
+function disbandCountry() {
+  var select = document.getElementById('countries');
+  var countryId = select.options[select.selectedIndex].value;
+  var updates = {};
+  updates['/countries/' + countryId] = null;
+  
+  // Log the action
+  console.log('Country ' + countryId + ' disbanded');
+  
+  return database.ref().update(updates);
+}
+
+// Function to kick a user from a country
+function kickUser() {
+  var select = document.getElementById('users');
+  var userId = select.options[select.selectedIndex].value;
+  var updates = {};
+  updates['/users/' + userId + '/country'] = null;
+  
+  // Log the action
+  console.log('User ' + userId + ' kicked from country');
+  
+  return database.ref().update(updates);
+}
+
+// Call getCountries on page load
+window.onload = getCountries;
+
+</script>
